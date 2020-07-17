@@ -1,0 +1,8 @@
+aiohttp
+crayons
+discord.py
+fortnitepy
+jaconv
+jinja2
+requests
+sanic

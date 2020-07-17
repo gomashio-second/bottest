@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html style="background-image: url('/images/background.png'); background-color: #36393F; background-size: cover; width: 100%; height: 100%; font-size: 1.9vmin;">
+<style>
+    textarea {
+        background-color: #40444B;
+        color: #DDDDDD;
+        width: 80vmin;
+    }
+
+    textarea::placeholder {
+        color: #DDDDDD;
+    }
+
+    button {
+        background-color: #B9BBBE;
+        color: #40444B;
+        width: 10vmin;
+    }
+
+    a:link, a:visited, a:hover, a:active {
+        color: #DDDDDD;
+    }
+
+    body {
+        font-family: "Whitney", "Hiragino Sans", "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "メイリオ", "Meiryo", "Osaka", "MS PGothic", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+</style>
+<head>
+    <meta charset="UTF-8">
+    <title>{{l('party_viewer')}}</title>
+</head>
+<script>
+    function update() {
+        const request = new XMLHttpRequest();
+        var text = ""
+        var num = location.pathname.split("/");
+        num = num[num.length - 1].replace("clients", "")
+        request.open("GET", "./clients_info/" + num, true);
+        request.responseType = 'json';
+
+        request.onload = function() {
+            if (typeof this.response["error"] === "undefined") {
+                var members = document.getElementById("members");
+                members.innerHTML = "";
+                var party_id = document.createElement("h3");
+                party_text = document.createTextNode("{{l('party')}}" + " / " + this.response["party_id"]);
+                party_id.appendChild(party_text);
+                members.insertBefore(party_id,members.parentNode.nextSibling)
+
+                var count = 0
+                if (this.response["members"].length > 1) {
+                    this.response["members"].forEach(function(member) {
+                        render_members(member);
+                        count++
+                    })
+                } else {
+                    render_members(this.response);
+                } 
+
+                function render_members(member) {
+                    var member_div = document.createElement("div");
+                    member_div.setAttribute("id","member_" + count);
+                    member_div.setAttribute("style","position: relative; left: 5vmin;");
+                    var display_name = document.createElement("div");
+                    display_name.setAttribute("id","display_name");
+                    display_name.setAttribute("style","position: relative;")
+
+                    var parts = [member["outfit"], member["backpack"], member["pickaxe"], member["contrail"], member["emote"]];
+                    if (member["leader"]) {
+                        var image = document.createElement("img");
+                        image.setAttribute("src","/images/crown.png");
+                        image.setAttribute("style","width: 2.5vmin; display: block;");
+                        display_name.insertBefore(image,members.parentNode.nextSibling);
+
+                        var image = document.createElement("img");
+                        if (member["banner"]) {
+                            image.setAttribute("src","https://benbotfn.tk/api/v1/exportAsset?path=" + member["banner"]["LargeImage"]["assetPath"]);
+                        } else {
+                            image.setAttribute("src","https://benbotfn.tk/api/v1/exportAsset?path=Game/UI/Foundation/Textures/Banner/Standard/T-Banners-Icons-Waves-L.T-Banners-Icons-Waves-L");
+                        }
+                        image.setAttribute("style","width: 2.5vmin; top: 5px;");
+                        display_name.insertBefore(image,members.parentNode.nextSibling);
+
+                        var span = document.createElement("span");
+                        span.setAttribute("style","position: absolute; left: -10px; top: 32px;");
+                        var text = document.createTextNode(String(member["level"]));
+                        span.appendChild(text);
+                        display_name.insertBefore(span,members.parentNode.nextSibling);
+
+                        var name_text = document.createTextNode(member["display_name"] + " / " + member["id"]);
+                        display_name.appendChild(name_text);
+                    } else {
+                        var image = document.createElement("img");
+                        if (member["banner"]) {
+                            image.setAttribute("src","https://benbotfn.tk/api/v1/exportAsset?path=" + member["banner"]["LargeImage"]["assetPath"]);
+                        } else {
+                            image.setAttribute("src","https://benbotfn.tk/api/v1/exportAsset?path=Game/UI/Foundation/Textures/Banner/Standard/T-Banners-Icons-Waves-L.T-Banners-Icons-Waves-L");
+                        }
+                        image.setAttribute("style","width: 2.5vmin; top: 5px;");
+                        display_name.insertBefore(image,members.parentNode.nextSibling);
+
+                        var span = document.createElement("span");
+                        span.setAttribute("style","position: absolute; left: -10px; top: 20px;");
+                        var text = document.createTextNode(String(member["level"]));
+                        span.appendChild(text);
+                        display_name.insertBefore(span,members.parentNode.nextSibling);
+
+                        var name_text = document.createTextNode(member["display_name"] + " / " + member["id"]);
+                        display_name.appendChild(name_text)
+                    }
+                    member_div.insertBefore(display_name,members.parentNode.nextSibling);
+
+                    parts.forEach(function(part) {
+                        if (part != null) {
+                            var image = document.createElement("img");
+                            image.setAttribute("src","https://benbotfn.tk/cdn/images/" + part + "/icon.png");
+                            image.setAttribute("onerror","this.onerror=null; this.src='/images/placeholder.png'");
+                            image.setAttribute("style","width: 15vmin;");
+                            member_div.insertBefore(image,members.parentNode.nextSibling);
+                        }
+                    })
+
+                    members.insertBefore(member_div,members.parentNode.nextSibling);
+                }
+            } else if (this.response["error"] == "account_not_exists") {
+                document.getElementById("members").innerHTML = "{{l('account_not_exists')}}";
+            } else if (this.response["error"] == "account_not_loaded") {
+                document.getElementById("members").innerHTML = "{{l('account_not_loaded')}}";
+            } else if (this.response["error"] == "party_moving") {
+                document.getElementById("members").innerHTML = "{{l('party_moving')}}";
+            }
+        }
+
+        request.send("");
+    }
+    update();
+    setInterval('update()',1000);
+</script>
+<body style="color: #DDDDDD;">
+    <h3>
+        <a href="/party_viewer">{{l('web_back')}}</a>
+    </h3>
+    <p>{{l('command')}}</p>
+    <form action="" method="post">
+        <textarea name="command" rows="5" placeholder="{{l('command')}}" onkeypress="if (event.keyCode==13) {if(!event.shiftKey==true) {form.submit()}}"></textarea>
+        <button type="submit">{{l('run')}}</button>
+    </form>
+    {% if len(flash_messages) > 0 %}
+        <p>{{l('result')}}</p>
+        {% for message in flash_messages %}
+            <p>{{message}}</p>
+        {% endfor %}
+    {% endif %}
+    <div id="members">
+        <p>{{l('loading')}}</p>
+    </div>
+</body>
+</html>
